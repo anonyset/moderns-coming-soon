@@ -15,6 +15,7 @@ require_once MCS_PLUGIN_DIR . 'includes/class-mcs-rest.php';
 require_once MCS_PLUGIN_DIR . 'includes/class-mcs-frontend.php';
 require_once MCS_PLUGIN_DIR . 'includes/class-mcs-blocks.php';
 require_once MCS_PLUGIN_DIR . 'includes/class-mcs-elementor.php';
+require_once MCS_PLUGIN_DIR . 'includes/class-mcs-updater.php';
 
 /**
  * Core plugin controller.
@@ -71,6 +72,13 @@ class Modern_Coming_Soon {
 	public $elementor;
 
 	/**
+	 * Updater handler.
+	 *
+	 * @var MCS_Updater
+	 */
+	public $updater;
+
+	/**
 	 * Instantiate singleton.
 	 *
 	 * @return Modern_Coming_Soon
@@ -93,6 +101,10 @@ class Modern_Coming_Soon {
 		$this->frontend    = new MCS_Frontend( $this->settings, $this->subscribers );
 		$this->blocks      = new MCS_Blocks( $this->settings );
 		$this->elementor   = new MCS_Elementor( $this->settings );
+		if ( is_admin() ) {
+			$this->updater = new MCS_Updater( MCS_PLUGIN_FILE, MCS_VERSION );
+			$this->updater->hooks();
+		}
 
 		add_action( 'plugins_loaded', array( $this, 'load_textdomain' ) );
 		add_filter( 'gettext', array( $this, 'fallback_farsi' ), 10, 3 );

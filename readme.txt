@@ -4,7 +4,7 @@ Tags: coming soon, maintenance mode, elementor, gutenberg, countdown
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -43,10 +43,16 @@ In the `wp_mcs_subscribers` table. Export from the **Subscribers** tab (REST end
 
 == Changelog ==
 
+= 1.0.1 =
+* Add GitHub release updater so WordPress can fetch new versions automatically.
+
 = 1.0.0 =
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+Adds built-in GitHub updates so you can update from the Plugins screen.
 
 = 1.0.0 =
 First release of the modern coming soon, maintenance, and factory mode toolkit.
