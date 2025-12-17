@@ -4,7 +4,7 @@ Tags: coming soon, maintenance mode, elementor, gutenberg, countdown
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 1.0.4
+Stable tag: 1.0.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -43,6 +43,9 @@ In the `wp_mcs_subscribers` table. Export from the **Subscribers** tab (REST end
 
 == Changelog ==
 
+= 1.0.5 =
+* Updater now falls back to branch head (main/master) when no releases or tags exist, so pushing to GitHub with a higher version is enough.
+
 = 1.0.4 =
 * Updater now falls back to the latest Git tag when no GitHub Releases exist, and adds `Update URI` to avoid wp.org collisions.
 
@@ -56,6 +59,9 @@ In the `wp_mcs_subscribers` table. Export from the **Subscribers** tab (REST end
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.0.5 =
+Enables updates even without tags/releases by reading the version from the main branch and downloading that zip.
 
 = 1.0.4 =
 Ensures auto-update works even without a published GitHub Release by falling back to tags.

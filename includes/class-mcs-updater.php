@@ -197,7 +197,8 @@ class MCS_Updater {
 	}
 
 	/**
-	 * Fetch latest GitHub release (cached). Falls back to tags if no releases exist.
+	 * Fetch latest version info (cached).
+	 * Priority: release -> tag -> branch head (main/master).
 	 *
 	 * @return array|false
 	 */
@@ -211,6 +212,10 @@ class MCS_Updater {
 
 		if ( ! $release ) {
 			$release = $this->fetch_latest_tag();
+		}
+
+		if ( ! $release ) {
+			$release = $this->fetch_branch_head();
 		}
 
 		if ( ! $release ) {
@@ -294,18 +299,72 @@ class MCS_Updater {
 	}
 
 	/**
+	 * Fallback: use branch head when no tags/releases exist.
+	 *
+	 * @return array|false
+	 */
+	private function fetch_branch_head() {
+		$branches = array( 'main', 'master' );
+
+		foreach ( $branches as $branch ) {
+			$response = wp_remote_get(
+				'https://raw.githubusercontent.com/' . $this->repo . '/' . $branch . '/modern-coming-soon.php',
+				array(
+					'headers' => array(
+						'User-Agent' => 'modern-coming-soon-updater',
+					),
+					'timeout' => 15,
+				)
+			);
+
+			if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+				continue;
+			}
+
+			$contents = wp_remote_retrieve_body( $response );
+			if ( empty( $contents ) ) {
+				continue;
+			}
+
+			if ( ! preg_match( '/^\\s*\\*\\s*Version:\\s*(.+)$/mi', $contents, $matches ) ) {
+				continue;
+			}
+
+			$version = trim( $matches[1] );
+			if ( empty( $version ) ) {
+				continue;
+			}
+
+			$tag = $branch;
+
+			return $this->normalize_release(
+				$tag,
+				'https://github.com/' . $this->repo . '/tree/' . $branch,
+				__( 'Latest commit from branch head.', 'modern-coming-soon' ),
+				current_time( 'mysql' ),
+				$branch
+			);
+		}
+
+		return false;
+	}
+
+	/**
 	 * Normalize release/tag data to shared shape.
 	 *
-	 * @param string $tag          Tag name.
-	 * @param string $url          URL to release/tag page.
+	 * @param string $tag          Tag name (or branch name).
+	 * @param string $url          URL to release/tag/branch page.
 	 * @param string $body         Notes/body.
 	 * @param string $published_at Published date.
+	 * @param string $branch       Optional branch name for zip URL.
 	 *
 	 * @return array
 	 */
-	private function normalize_release( $tag, $url, $body, $published_at ) {
+	private function normalize_release( $tag, $url, $body, $published_at, $branch = '' ) {
+		$is_branch    = in_array( $tag, array( 'main', 'master' ), true ) || $branch;
+		$download_ref = $is_branch && $branch ? $branch : $tag;
 		$version      = ltrim( $tag, 'vV' );
-		$download_url = sprintf( 'https://github.com/%1$s/archive/refs/tags/%2$s.zip', $this->repo, rawurlencode( $tag ) );
+		$download_url = sprintf( 'https://github.com/%1$s/archive/refs/%2$s/%3$s.zip', $this->repo, $is_branch ? 'heads' : 'tags', rawurlencode( $download_ref ) );
 
 		return array(
 			'tag'          => $tag,
