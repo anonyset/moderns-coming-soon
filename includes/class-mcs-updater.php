@@ -197,7 +197,7 @@ class MCS_Updater {
 	}
 
 	/**
-	 * Fetch latest GitHub release (cached).
+	 * Fetch latest GitHub release (cached). Falls back to tags if no releases exist.
 	 *
 	 * @return array|false
 	 */
@@ -207,6 +207,28 @@ class MCS_Updater {
 			return $cached;
 		}
 
+		$release = $this->fetch_release();
+
+		if ( ! $release ) {
+			$release = $this->fetch_latest_tag();
+		}
+
+		if ( ! $release ) {
+			set_site_transient( $this->cache_key, false, HOUR_IN_SECONDS );
+			return false;
+		}
+
+		set_site_transient( $this->cache_key, $release, $this->cache_ttl );
+
+		return $release;
+	}
+
+	/**
+	 * Try to read the latest published GitHub release.
+	 *
+	 * @return array|false
+	 */
+	private function fetch_release() {
 		$response = wp_remote_get(
 			'https://api.github.com/repos/' . $this->repo . '/releases/latest',
 			array(
@@ -219,33 +241,79 @@ class MCS_Updater {
 		);
 
 		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
-			set_site_transient( $this->cache_key, false, HOUR_IN_SECONDS );
 			return false;
 		}
 
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( ! is_array( $body ) || empty( $body['tag_name'] ) ) {
-			set_site_transient( $this->cache_key, false, HOUR_IN_SECONDS );
 			return false;
 		}
 
-		$tag           = $body['tag_name'];
-		$version       = ltrim( $tag, 'vV' );
-		$download_url  = sprintf( 'https://github.com/%1$s/archive/refs/tags/%2$s.zip', $this->repo, rawurlencode( $tag ) );
-		$release_notes = isset( $body['body'] ) ? $body['body'] : '';
-		$published_at  = isset( $body['published_at'] ) ? $body['published_at'] : '';
+		return $this->normalize_release(
+			$body['tag_name'],
+			isset( $body['html_url'] ) ? $body['html_url'] : 'https://github.com/' . $this->repo,
+			isset( $body['body'] ) ? $body['body'] : '',
+			isset( $body['published_at'] ) ? $body['published_at'] : ''
+		);
+	}
 
-		$release = array(
+	/**
+	 * Fallback: use latest Git tag when no releases exist.
+	 *
+	 * @return array|false
+	 */
+	private function fetch_latest_tag() {
+		$response = wp_remote_get(
+			'https://api.github.com/repos/' . $this->repo . '/tags',
+			array(
+				'headers' => array(
+					'Accept'     => 'application/vnd.github+json',
+					'User-Agent' => 'modern-coming-soon-updater',
+				),
+				'timeout' => 15,
+			)
+		);
+
+		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+			return false;
+		}
+
+		$body = json_decode( wp_remote_retrieve_body( $response ), true );
+		if ( ! is_array( $body ) || empty( $body[0]['name'] ) ) {
+			return false;
+		}
+
+		$tag = $body[0]['name'];
+
+		return $this->normalize_release(
+			$tag,
+			'https://github.com/' . $this->repo . '/releases',
+			__( 'Release notes are available in the GitHub repository.', 'modern-coming-soon' ),
+			current_time( 'mysql' )
+		);
+	}
+
+	/**
+	 * Normalize release/tag data to shared shape.
+	 *
+	 * @param string $tag          Tag name.
+	 * @param string $url          URL to release/tag page.
+	 * @param string $body         Notes/body.
+	 * @param string $published_at Published date.
+	 *
+	 * @return array
+	 */
+	private function normalize_release( $tag, $url, $body, $published_at ) {
+		$version      = ltrim( $tag, 'vV' );
+		$download_url = sprintf( 'https://github.com/%1$s/archive/refs/tags/%2$s.zip', $this->repo, rawurlencode( $tag ) );
+
+		return array(
 			'tag'          => $tag,
 			'version'      => $version,
 			'download_url' => $download_url,
-			'url'          => isset( $body['html_url'] ) ? $body['html_url'] : 'https://github.com/' . $this->repo,
-			'body'         => $release_notes,
+			'url'          => $url,
+			'body'         => $body,
 			'published_at' => $published_at,
 		);
-
-		set_site_transient( $this->cache_key, $release, $this->cache_ttl );
-
-		return $release;
 	}
 }
