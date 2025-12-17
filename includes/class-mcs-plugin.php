@@ -16,6 +16,7 @@ require_once MCS_PLUGIN_DIR . 'includes/class-mcs-frontend.php';
 require_once MCS_PLUGIN_DIR . 'includes/class-mcs-blocks.php';
 require_once MCS_PLUGIN_DIR . 'includes/class-mcs-elementor.php';
 require_once MCS_PLUGIN_DIR . 'includes/class-mcs-updater.php';
+require_once MCS_PLUGIN_DIR . 'includes/puc/plugin-update-checker.php';
 
 /**
  * Core plugin controller.
@@ -72,11 +73,18 @@ class Modern_Coming_Soon {
 	public $elementor;
 
 	/**
-	 * Updater handler.
+	 * Updater handler (legacy custom).
 	 *
-	 * @var MCS_Updater
+	 * @var MCS_Updater|null
 	 */
 	public $updater;
+
+	/**
+	 * PUC updater.
+	 *
+	 * @var Puc_v4p13_Plugin_UpdateChecker|null
+	 */
+	public $puc;
 
 	/**
 	 * Instantiate singleton.
@@ -102,8 +110,7 @@ class Modern_Coming_Soon {
 		$this->blocks      = new MCS_Blocks( $this->settings );
 		$this->elementor   = new MCS_Elementor( $this->settings );
 		if ( is_admin() ) {
-			$this->updater = new MCS_Updater( MCS_PLUGIN_FILE, MCS_VERSION );
-			$this->updater->hooks();
+			$this->bootstrap_updater();
 		}
 
 		add_action( 'plugins_loaded', array( $this, 'load_textdomain' ) );
@@ -116,6 +123,29 @@ class Modern_Coming_Soon {
 		$this->frontend->hooks();
 		$this->blocks->hooks();
 		$this->elementor->hooks();
+	}
+
+	/**
+	 * Initialize auto-update via PUC with GitHub fallback.
+	 */
+	private function bootstrap_updater() {
+		// Preferred: plugin-update-checker (PUC) from GitHub.
+		if ( class_exists( 'Puc_v4_Factory' ) ) {
+			$this->puc = Puc_v4_Factory::buildUpdateChecker(
+				'https://github.com/anonyset/modern-coming-soon/',
+				MCS_PLUGIN_FILE,
+				'modern-coming-soon'
+			);
+			// Allow "v1.2.3" tags; if none, will still work with branch if you set below.
+			$this->puc->setBranch( 'main' );
+			$this->puc->getVcsApi()->enableReleaseAssets();
+		}
+
+		// Fallback: custom lightweight updater (release/tag/branch fetcher).
+		if ( empty( $this->puc ) ) {
+			$this->updater = new MCS_Updater( MCS_PLUGIN_FILE, MCS_VERSION );
+			$this->updater->hooks();
+		}
 	}
 
 	/**

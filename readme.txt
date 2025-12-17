@@ -44,7 +44,7 @@ In the `wp_mcs_subscribers` table. Export from the **Subscribers** tab (REST end
 == Changelog ==
 
 = 1.0.5 =
-* Updater now falls back to branch head (main/master) when no releases or tags exist, so pushing to GitHub with a higher version is enough.
+* Added plugin-update-checker (PUC) GitHub updater targeting the main branch, with legacy fallback to custom updater and branch-head support when no tags/releases exist.
 
 = 1.0.4 =
 * Updater now falls back to the latest Git tag when no GitHub Releases exist, and adds `Update URI` to avoid wp.org collisions.
