@@ -164,23 +164,54 @@ function Design({ settings, setSettings, previewUrl }) {
 		return () => clearTimeout(timer);
 	}, [settings]);
 
+	const handleLogoSelect = (media) => {
+		if (!media) return;
+		update({ logo: media.url, logo_id: media.id });
+	};
+
+	const openLegacyMedia = () => {
+		if (!window.wp?.media) {
+			dispatch('core/notices').createErrorNotice(__('Media library not available.', 'modern-coming-soon'));
+			return;
+		}
+		const frame = window.wp.media({
+			title: __('Select Logo', 'modern-coming-soon'),
+			button: { text: __('Use this', 'modern-coming-soon') },
+			multiple: false,
+			library: { type: ['image'] },
+		});
+		frame.on('select', () => {
+			const media = frame.state().get('selection').first()?.toJSON?.();
+			if (media) handleLogoSelect(media);
+		});
+		frame.open();
+	};
+
 	return h('div', { className: 'mcs-design' },
 		h('div', { className: 'mcs-design__controls' },
 			h(Card, null,
 				h(CardHeader, null, __('Branding', 'modern-coming-soon')),
 				h(CardBody, null,
-					h('div', { className: 'mcs-media' },
-						h('div', { className: 'mcs-media__preview' },
-							settings?.logo ? h('img', { src: settings.logo, alt: __('Logo', 'modern-coming-soon') }) : h('div', { className: 'mcs-media__placeholder' }, __('No logo', 'modern-coming-soon'))
-						),
-						h(MediaUpload, {
-							onSelect: (media) => update({ logo: media.url, logo_id: media.id }),
+					MediaUpload
+						? h(MediaUpload, {
+							onSelect: handleLogoSelect,
 							allowedTypes: ['image'],
 							value: settings?.logo_id || 0,
-							render: ({ open }) => h(Button, { onClick: open, variant: 'secondary' }, __('Select Logo', 'modern-coming-soon')),
-						}),
-						settings?.logo && h(Button, { isDestructive: true, variant: 'link', onClick: () => update({ logo: '', logo_id: 0 }) }, __('Remove', 'modern-coming-soon'))
-					),
+							render: ({ open }) => h('div', { className: 'mcs-media' },
+								h('div', { className: 'mcs-media__preview', onClick: open },
+									settings?.logo ? h('img', { src: settings.logo, alt: __('Logo', 'modern-coming-soon') }) : h('div', { className: 'mcs-media__placeholder' }, __('No logo', 'modern-coming-soon'))
+								),
+								h(Button, { onClick: open, variant: 'secondary' }, __('Select Logo', 'modern-coming-soon')),
+								settings?.logo && h(Button, { isDestructive: true, variant: 'link', onClick: () => update({ logo: '', logo_id: 0 }) }, __('Remove', 'modern-coming-soon'))
+							),
+						})
+						: h('div', { className: 'mcs-media' },
+							h('div', { className: 'mcs-media__preview', onClick: openLegacyMedia },
+								settings?.logo ? h('img', { src: settings.logo, alt: __('Logo', 'modern-coming-soon') }) : h('div', { className: 'mcs-media__placeholder' }, __('No logo', 'modern-coming-soon'))
+							),
+							h(Button, { onClick: openLegacyMedia, variant: 'secondary' }, __('Select Logo', 'modern-coming-soon')),
+							settings?.logo && h(Button, { isDestructive: true, variant: 'link', onClick: () => update({ logo: '', logo_id: 0 }) }, __('Remove', 'modern-coming-soon'))
+						),
 					h(TextControl, { label: __('Title', 'modern-coming-soon'), value: settings?.title || '', onChange: (val) => update({ title: val }) }),
 					h(TextControl, { label: __('Subtitle', 'modern-coming-soon'), value: settings?.subtitle || '', onChange: (val) => update({ subtitle: val }) }),
 					h(TextareaControl, { label: __('Description', 'modern-coming-soon'), value: settings?.content || '', onChange: (val) => update({ content: val }) })
