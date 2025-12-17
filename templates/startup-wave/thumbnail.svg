@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="320" viewBox="0 0 560 320">
+  <defs>
+    <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+  </defs>
+  <rect width="560" height="320" rx="18" fill="#0b1221"/>
+  <rect x="28" y="40" width="504" height="240" rx="20" fill="url(#g2)" opacity="0.8"/>
+  <text x="50%" y="50%" fill="#fff" font-size="28" font-family="Arial" text-anchor="middle" font-weight="700">Startup Wave</text>
+  <text x="50%" y="62%" fill="#e2e8f0" font-size="16" font-family="Arial" text-anchor="middle">استارتاپ موج</text>
+</svg>

@@ -1,0 +1,49 @@
+.mcs-admin-app{display:flex;flex-direction:column;gap:16px;max-width:1400px;margin:0 auto;direction:ltr;font-family:'Vazir','Tahoma','Arial',sans-serif}
+.mcs-admin-app.is-rtl{direction:rtl}
+.mcs-header{display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:32px;z-index:10;background:#fff;padding:12px 16px;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.04)}
+.mcs-header__title .mcs-title{font-size:18px;font-weight:700;margin:0}
+.mcs-header__title .mcs-subtitle{margin:2px 0 0;font-size:13px;color:#4b5563}
+.mcs-header__actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mcs-mode-switch .components-button{border-radius:999px}
+.mcs-status{padding:6px 10px;border-radius:999px;font-size:12px}
+.mcs-status.is-active{background:#ecfdf3;color:#16a34a}
+.mcs-status.is-inactive{background:#f3f4f6;color:#374151}
+.mcs-body{display:grid;grid-template-columns:240px 1fr;gap:16px}
+.mcs-nav{display:flex;flex-direction:column;gap:6px;position:sticky;top:120px}
+.mcs-nav__item{justify-content:flex-start;text-align:left}
+.mcs-main{display:flex;flex-direction:column;gap:12px}
+.mcs-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.mcs-toggle-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.mcs-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.mcs-design{display:grid;grid-template-columns:380px 1fr;gap:12px}
+.mcs-design__controls{display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 180px);overflow:auto;padding-right:8px}
+.mcs-design__preview{background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:8px}
+.mcs-preview-toolbar{display:flex;align-items:center;justify-content:space-between;padding:4px 8px}
+.mcs-preview-frame{border:1px solid #e5e7eb;border-radius:8px;width:100%;height:600px;background:#fff}
+.mcs-template-filters{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.mcs-chips{display:flex;gap:6px;flex-wrap:wrap}
+.mcs-template-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.mcs-template-card{border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;cursor:pointer;position:relative;transition:box-shadow .2s}
+.mcs-template-card.is-selected{box-shadow:0 10px 30px rgba(59,130,246,0.2);border-color:#3b82f6}
+.mcs-template-thumb{height:160px;background-size:cover;background-position:center}
+.mcs-template-meta{padding:10px}
+.mcs-template-name{font-weight:700}
+.mcs-template-cat{font-size:12px;color:#6b7280}
+.mcs-template-actions{display:flex;gap:6px;padding:10px;padding-top:0}
+.mcs-savebar{position:fixed;left:0;right:0;bottom:0;background:#0ea5e9;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:10px 16px;z-index:99}
+.mcs-loading{display:flex;align-items:center;justify-content:center;min-height:200px}
+.mcs-subs-toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap}
+.mcs-color-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.mcs-template-card .components-button{width:100%}
+.mcs-media{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.mcs-media__preview img{width:72px;height:72px;object-fit:contain;border:1px solid #e5e7eb;border-radius:8px;background:#fff}
+.mcs-media__placeholder{width:72px;height:72px;border:1px dashed #d1d5db;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:12px}
+.mcs-device-toggle{display:flex;gap:4px;align-items:center}
+.mcs-preview-shell{overflow:hidden;padding:8px;display:flex;justify-content:center}
+.mcs-role-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px}
+.mcs-repeater{display:flex;flex-direction:column;gap:8px}
+.mcs-repeater__row{display:flex;align-items:flex-end;gap:8px}
+.mcs-token-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mcs-admin-app:before{content:"";display:none}
+.mcs-admin-app{display:flex;flex-direction:column;gap:16px;max-width:1400px;margin:0 auto;direction:ltr;font-family:'Vazir','Tahoma','Arial',sans-serif}
+@import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@v30.1.0/dist/font-face.css');

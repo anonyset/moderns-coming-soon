@@ -1,0 +1,12 @@
+{
+  "slug": "startup-wave",
+  "name": {
+    "fa": "استارتاپ موج",
+    "en": "Startup Wave"
+  },
+  "category": "startup",
+  "thumbnail": "thumbnail.svg",
+  "preview": "thumbnail.svg",
+  "description": "Bold gradient hero for startups.",
+  "tags": ["startup","gradient","tech"]
+}

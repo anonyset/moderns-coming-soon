@@ -1,0 +1,12 @@
+{
+  "slug": "restaurant-ember",
+  "name": {
+    "fa": "رستوران امبر",
+    "en": "Restaurant Ember"
+  },
+  "category": "restaurant",
+  "thumbnail": "thumbnail.svg",
+  "preview": "thumbnail.svg",
+  "description": "Warm culinary countdown layout.",
+  "tags": ["restaurant","food","warm"]
+}

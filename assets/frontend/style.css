@@ -1,0 +1,7 @@
+.mcs-subscribe-form input[type="email"]{width:100%;max-width:320px;padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.08)}
+.mcs-subscribe-form button{padding:10px 14px;border-radius:8px;border:none;background:#0ea5e9;color:#fff;font-weight:700;cursor:pointer}
+.mcs-subscribe-form .mcs-message{margin-top:6px;font-size:14px;color:#0ea5e9}
+.mcs-countdown-block{padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.08);display:inline-block}
+.mcs-countdown-values{font-weight:700}
+@import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@v30.1.0/dist/font-face.css');
+.mcs-root, body{font-family:'Vazir','Tahoma','Arial',sans-serif}

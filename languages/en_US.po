@@ -1,0 +1,26 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Modern Coming Soon 1.0.0\n"
+"POT-Creation-Date: 2025-12-17 00:00+0000\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Coming Soon"
+msgstr "Coming Soon"
+
+msgid "Maintenance"
+msgstr "Maintenance"
+
+msgid "Factory Lock"
+msgstr "Factory Lock"
+
+msgid "Settings saved."
+msgstr "Settings saved."
+
+msgid "Invalid email address."
+msgstr "Invalid email address."
+
+msgid "Too many attempts. Please try later."
+msgstr "Too many attempts. Please try later."

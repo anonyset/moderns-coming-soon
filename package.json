@@ -1,0 +1,12 @@
+{
+  "name": "modern-coming-soon",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "wp-scripts start admin/src/index.js --output-path assets/admin",
+    "build": "wp-scripts build admin/src/index.js --output-path assets/admin"
+  },
+  "devDependencies": {
+    "@wordpress/scripts": "^27.8.0"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "slug": "classic",
+  "name": {
+    "fa": "کلاسیک شرکتی",
+    "en": "Corporate Glass"
+  },
+  "category": "corporate",
+  "thumbnail": "thumbnail.svg",
+  "preview": "thumbnail.svg",
+  "description": "Transparent glass look for corporate launches.",
+  "tags": ["corporate","glass","classic"]
+}

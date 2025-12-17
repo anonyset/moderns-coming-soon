@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="320" viewBox="0 0 560 320">
+  <defs>
+    <linearGradient id="g3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+  </defs>
+  <rect width="560" height="320" rx="18" fill="#1f0f0f"/>
+  <rect x="30" y="36" width="500" height="248" rx="18" fill="url(#g3)" opacity="0.85"/>
+  <text x="50%" y="50%" fill="#fff7ed" font-size="26" font-family="Arial" text-anchor="middle" font-weight="700">Restaurant Ember</text>
+  <text x="50%" y="62%" fill="#fef3c7" font-size="16" font-family="Arial" text-anchor="middle">رستوران امبر</text>
+</svg>
