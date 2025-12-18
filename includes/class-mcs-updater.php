@@ -184,16 +184,101 @@ class MCS_Updater {
 		global $wp_filesystem;
 
 		if ( ! $wp_filesystem || ! method_exists( $wp_filesystem, 'move' ) ) {
-			return $source;
+			// If WP_Filesystem isn't available, we'll try native PHP fallbacks below.
+			// Don't return here so we can attempt other strategies.
 		}
 
 		$new_source = trailingslashit( dirname( $source ) ) . $expected;
 
-		if ( $wp_filesystem->move( $source, $new_source, true ) ) {
+		// Prefer WP_Filesystem move when available.
+		if ( $wp_filesystem && method_exists( $wp_filesystem, 'move' ) ) {
+			if ( $wp_filesystem->move( $source, $new_source, true ) ) {
+				return $new_source;
+			}
+		}
+
+		// Fallback: try native PHP rename(). This sometimes works when WP_Filesystem
+		// is not initialized or uses a different transport.
+		if ( @rename( $source, $new_source ) ) {
 			return $new_source;
 		}
 
+		// Last resort: recursively copy the extracted folder to the expected name,
+		// then remove the original. This handles cases where move/rename fail due to
+		// cross-device or permission quirks.
+		if ( $this->copy_directory( $source, $new_source ) ) {
+			// Attempt to delete the original directory. Ignore failures here.
+			$this->remove_directory( $source );
+			return $new_source;
+		}
+
+		// Nothing worked; return original path so WP can handle/report the error.
 		return $source;
+	}
+
+	/**
+	 * Recursively copy a directory.
+	 *
+	 * @param string $source Source path.
+	 * @param string $dest Destination path.
+	 * @return bool True on success.
+	 */
+	private function copy_directory( $source, $dest ) {
+		if ( ! is_dir( $source ) ) {
+			return false;
+		}
+
+		if ( ! is_dir( $dest ) ) {
+			if ( ! @mkdir( $dest, 0755, true ) && ! is_dir( $dest ) ) {
+				return false;
+			}
+		}
+
+		$dir = opendir( $source );
+		if ( ! $dir ) {
+			return false;
+		}
+
+		while ( false !== ( $file = readdir( $dir ) ) ) {
+			if ( $file === '.' || $file === '..' ) {
+				continue;
+			}
+
+			$srcPath = $source . DIRECTORY_SEPARATOR . $file;
+			$dstPath = $dest . DIRECTORY_SEPARATOR . $file;
+
+			if ( is_dir( $srcPath ) ) {
+				$this->copy_directory( $srcPath, $dstPath );
+			} else {
+				@copy( $srcPath, $dstPath );
+			}
+		}
+
+		closedir( $dir );
+		return true;
+	}
+
+	/**
+	 * Recursively remove a directory.
+	 *
+	 * @param string $dir Directory path.
+	 * @return bool True on success.
+	 */
+	private function remove_directory( $dir ) {
+		if ( ! is_dir( $dir ) ) {
+			return false;
+		}
+
+		$files = array_diff( scandir( $dir ), array( '.', '..' ) );
+		foreach ( $files as $file ) {
+			$path = $dir . DIRECTORY_SEPARATOR . $file;
+			if ( is_dir( $path ) ) {
+				$this->remove_directory( $path );
+			} else {
+				@unlink( $path );
+			}
+		}
+		return @rmdir( $dir );
 	}
 
 	/**
