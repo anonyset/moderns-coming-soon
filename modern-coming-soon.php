@@ -3,7 +3,7 @@
  * Plugin Name: Modern Coming Soon & Maintenance
  * Plugin URI: https://wordpress.org/plugins/modern-coming-soon
  * Description: Modern Coming Soon, Maintenance, and Factory (Hard Lock) modes with React admin, template library, Gutenberg, and Elementor widgets.
- * Version: 1.0.10
+ * Version: 1.0.11
  * Author: Hosein Momeni
  * Author URI: https://qomweb.site/maint
  * Text Domain: modern-coming-soon
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'MCS_VERSION', '1.0.10' );
+define( 'MCS_VERSION', '1.0.11' );
 define( 'MCS_PLUGIN_FILE', __FILE__ );
 define( 'MCS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'MCS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
