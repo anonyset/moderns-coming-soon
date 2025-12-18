@@ -130,15 +130,41 @@ class Modern_Coming_Soon {
 	 */
 	private function bootstrap_updater() {
 		// Preferred: plugin-update-checker (PUC) from GitHub.
+		// The bundled PUC may expose different factory class names depending on version
+		// (legacy globals or namespaced factories). Try a few known options and
+		// initialize the first one that's available.
+		$puc_factory = null;
 		if ( class_exists( 'Puc_v4_Factory' ) ) {
-			$this->puc = Puc_v4_Factory::buildUpdateChecker(
+			$puc_factory = 'Puc_v4_Factory';
+		} elseif ( class_exists( 'Puc_v4p13_Factory' ) ) {
+			$puc_factory = 'Puc_v4p13_Factory';
+		} elseif ( class_exists( '\\YahnisElsts\\PluginUpdateChecker\\v5p4\\PucFactory' ) ) {
+			$puc_factory = '\\YahnisElsts\\PluginUpdateChecker\\v5p4\\PucFactory';
+		} elseif ( class_exists( '\\YahnisElsts\\PluginUpdateChecker\\v5\\PucFactory' ) ) {
+			$puc_factory = '\\YahnisElsts\\PluginUpdateChecker\\v5\\PucFactory';
+		}
+
+		if ( $puc_factory ) {
+			// Use call_user_func so we can support namespaced and non-namespaced factories.
+			$this->puc = call_user_func(
+				array( $puc_factory, 'buildUpdateChecker' ),
 				'https://github.com/anonyset/modern-coming-soon/',
 				MCS_PLUGIN_FILE,
 				'modern-coming-soon'
 			);
-			// Allow "v1.2.3" tags; if none, will still work with branch if you set below.
-			$this->puc->setBranch( 'main' );
-			$this->puc->getVcsApi()->enableReleaseAssets();
+
+			// Best-effort: set branch and enable release assets if available on this instance.
+			if ( is_object( $this->puc ) ) {
+				if ( method_exists( $this->puc, 'setBranch' ) ) {
+					$this->puc->setBranch( 'main' );
+				}
+				if ( method_exists( $this->puc, 'getVcsApi' ) ) {
+					$api = $this->puc->getVcsApi();
+					if ( is_object( $api ) && method_exists( $api, 'enableReleaseAssets' ) ) {
+						$api->enableReleaseAssets();
+					}
+				}
+			}
 		}
 
 		// Fallback: custom lightweight updater (release/tag/branch fetcher).
