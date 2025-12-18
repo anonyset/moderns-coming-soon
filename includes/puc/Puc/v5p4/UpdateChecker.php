@@ -926,6 +926,14 @@ if ( !class_exists(UpdateChecker::class, false) ):
 
 			//Rename the source to match the existing directory.
 			$correctedSource = trailingslashit($remoteSource) . $this->directoryName . '/';
+			$normalizedSource = untrailingslashit($source);
+			$normalizedTarget = untrailingslashit($correctedSource);
+
+			// If paths already align, keep the trailing slash that WordPress expects and bail early.
+			if ( $normalizedSource === $normalizedTarget ) {
+				return trailingslashit($normalizedTarget);
+			}
+
 			if ( $source !== $correctedSource ) {
 				//The update archive should contain a single directory that contains the rest of plugin/theme files.
 				//Otherwise, WordPress will try to copy the entire working directory ($source == $remoteSource).
@@ -952,12 +960,28 @@ if ( !class_exists(UpdateChecker::class, false) ):
 				if ( $wp_filesystem->move($source, $correctedSource, true) ) {
 					$upgrader->skin->feedback('Directory successfully renamed.');
 					return $correctedSource;
-				} else {
-					return new WP_Error(
-						'puc-rename-failed',
-						'Unable to rename the update to match the existing directory.'
-					);
 				}
+
+				// Fallback: native rename when WP_Filesystem transport fails.
+				if ( @rename($normalizedSource, $normalizedTarget) ) {
+					return trailingslashit($normalizedTarget);
+				}
+
+				// Last resort: copy then remove to mimic a move when renaming is blocked.
+				if ( $this->copyDirectoryFallback($normalizedSource, $normalizedTarget) ) {
+					$this->removeDirectoryFallback($normalizedSource);
+					return trailingslashit($normalizedTarget);
+				}
+
+				// If the destination already exists with the right name, continue instead of hard failing.
+				if ( basename($normalizedSource) === basename($normalizedTarget) && is_dir($normalizedTarget) ) {
+					return trailingslashit($normalizedTarget);
+				}
+
+				return new WP_Error(
+					'puc-rename-failed',
+					'Unable to rename the update to match the existing directory.'
+				);
 			}
 
 			return $source;
@@ -991,6 +1015,81 @@ if ( !class_exists(UpdateChecker::class, false) ):
 
 			//Assume it's fine.
 			return false;
+		}
+
+		/**
+		 * Copy directory recursively. Minimal fallback to avoid rename failures.
+		 *
+		 * @param string $source Source path.
+		 * @param string $dest   Destination path.
+		 * @return bool
+		 */
+		private function copyDirectoryFallback($source, $dest) {
+			if ( !is_dir($source) ) {
+				return false;
+			}
+
+			if ( !is_dir($dest) && !@mkdir($dest, 0755, true) && !is_dir($dest) ) {
+				return false;
+			}
+
+			$items = scandir($source);
+			if ( $items === false ) {
+				return false;
+			}
+
+			foreach ( $items as $item ) {
+				if ( ($item === '.') || ($item === '..') ) {
+					continue;
+				}
+
+				$src = $source . DIRECTORY_SEPARATOR . $item;
+				$dst = $dest . DIRECTORY_SEPARATOR . $item;
+
+				if ( is_dir($src) ) {
+					if ( !$this->copyDirectoryFallback($src, $dst) ) {
+						return false;
+					}
+				} else {
+					if ( !@copy($src, $dst) ) {
+						return false;
+					}
+				}
+			}
+
+			return true;
+		}
+
+		/**
+		 * Remove directory recursively. Minimal fallback to avoid leftover temp folders.
+		 *
+		 * @param string $dir Directory path.
+		 * @return bool
+		 */
+		private function removeDirectoryFallback($dir) {
+			if ( !is_dir($dir) ) {
+				return false;
+			}
+
+			$items = scandir($dir);
+			if ( $items === false ) {
+				return false;
+			}
+
+			foreach ( $items as $item ) {
+				if ( ($item === '.') || ($item === '..') ) {
+					continue;
+				}
+
+				$path = $dir . DIRECTORY_SEPARATOR . $item;
+				if ( is_dir($path) ) {
+					$this->removeDirectoryFallback($path);
+				} else {
+					@unlink($path);
+				}
+			}
+
+			return @rmdir($dir);
 		}
 
 		/* -------------------------------------------------------------------

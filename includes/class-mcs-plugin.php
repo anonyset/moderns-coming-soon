@@ -203,29 +203,33 @@ class Modern_Coming_Soon {
 			return $source;
 		}
 
-		if ( basename( $source ) === $expected ) {
-			return $source;
+		$target = trailingslashit( dirname( untrailingslashit( $source ) ) ) . $expected . '/';
+
+		// If already at the right place, keep as-is.
+		if ( untrailingslashit( $source ) === untrailingslashit( $target ) ) {
+			return trailingslashit( $target );
 		}
 
-		$target = trailingslashit( dirname( $source ) ) . $expected;
-
+		// Ensure the target is gone so move/rename can succeed.
 		if ( is_dir( $target ) ) {
-			$this->remove_dir_fallback( $target );
+			if ( ! $this->remove_dir_fallback( $target ) && is_dir( $target ) ) {
+				return $source;
+			}
 		}
 
 		global $wp_filesystem;
 
 		if ( $wp_filesystem && method_exists( $wp_filesystem, 'move' ) && $wp_filesystem->move( $source, $target, true ) ) {
-			return $target;
+			return trailingslashit( $target );
 		}
 
 		if ( @rename( $source, $target ) ) {
-			return $target;
+			return trailingslashit( $target );
 		}
 
 		if ( $this->copy_dir_fallback( $source, $target ) ) {
 			$this->remove_dir_fallback( $source );
-			return $target;
+			return trailingslashit( $target );
 		}
 
 		return $source;
