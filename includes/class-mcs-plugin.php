@@ -31,6 +31,13 @@ class Modern_Coming_Soon {
 	private static $instance;
 
 	/**
+	 * Plugin basename (dir/file.php).
+	 *
+	 * @var string
+	 */
+	private $plugin_slug;
+
+	/**
 	 * Settings helper.
 	 *
 	 * @var MCS_Settings
@@ -109,7 +116,9 @@ class Modern_Coming_Soon {
 		$this->frontend    = new MCS_Frontend( $this->settings, $this->subscribers );
 		$this->blocks      = new MCS_Blocks( $this->settings );
 		$this->elementor   = new MCS_Elementor( $this->settings );
+		$this->plugin_slug = plugin_basename( MCS_PLUGIN_FILE );
 		if ( is_admin() ) {
+			add_filter( 'upgrader_source_selection', array( $this, 'fix_update_directory' ), 9, 4 );
 			$this->bootstrap_updater();
 		}
 
@@ -172,6 +181,129 @@ class Modern_Coming_Soon {
 			$this->updater = new MCS_Updater( MCS_PLUGIN_FILE, MCS_VERSION );
 			$this->updater->hooks();
 		}
+	}
+
+	/**
+	 * Safely rename extracted GitHub folder to the expected plugin directory.
+	 * Runs before PUC to avoid "Unable to rename the update..." failures.
+	 *
+	 * @param string      $source        Source path.
+	 * @param string      $remote_source Remote path.
+	 * @param WP_Upgrader $upgrader      Upgrader instance.
+	 * @param array       $hook_extra    Extra data.
+	 * @return string
+	 */
+	public function fix_update_directory( $source, $remote_source, $upgrader, $hook_extra ) {
+		if ( empty( $hook_extra['plugin'] ) || $hook_extra['plugin'] !== $this->plugin_slug ) {
+			return $source;
+		}
+
+		$expected = dirname( $this->plugin_slug );
+		if ( '.' === $expected || empty( $expected ) ) {
+			return $source;
+		}
+
+		if ( basename( $source ) === $expected ) {
+			return $source;
+		}
+
+		$target = trailingslashit( dirname( $source ) ) . $expected;
+
+		if ( is_dir( $target ) ) {
+			$this->remove_dir_fallback( $target );
+		}
+
+		global $wp_filesystem;
+
+		if ( $wp_filesystem && method_exists( $wp_filesystem, 'move' ) && $wp_filesystem->move( $source, $target, true ) ) {
+			return $target;
+		}
+
+		if ( @rename( $source, $target ) ) {
+			return $target;
+		}
+
+		if ( $this->copy_dir_fallback( $source, $target ) ) {
+			$this->remove_dir_fallback( $source );
+			return $target;
+		}
+
+		return $source;
+	}
+
+	/**
+	 * Recursive copy for updater rename fallback.
+	 *
+	 * @param string $source Source dir.
+	 * @param string $dest   Destination dir.
+	 * @return bool
+	 */
+	private function copy_dir_fallback( $source, $dest ) {
+		if ( ! is_dir( $source ) ) {
+			return false;
+		}
+
+		if ( ! is_dir( $dest ) && ! @mkdir( $dest, 0755, true ) && ! is_dir( $dest ) ) {
+			return false;
+		}
+
+		$items = scandir( $source );
+		if ( false === $items ) {
+			return false;
+		}
+
+		foreach ( $items as $item ) {
+			if ( '.' === $item || '..' === $item ) {
+				continue;
+			}
+
+			$src = $source . DIRECTORY_SEPARATOR . $item;
+			$dst = $dest . DIRECTORY_SEPARATOR . $item;
+
+			if ( is_dir( $src ) ) {
+				if ( ! $this->copy_dir_fallback( $src, $dst ) ) {
+					return false;
+				}
+			} else {
+				if ( ! @copy( $src, $dst ) ) {
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Recursive remove for updater rename fallback.
+	 *
+	 * @param string $dir Directory path.
+	 * @return bool
+	 */
+	private function remove_dir_fallback( $dir ) {
+		if ( ! is_dir( $dir ) ) {
+			return false;
+		}
+
+		$items = scandir( $dir );
+		if ( false === $items ) {
+			return false;
+		}
+
+		foreach ( $items as $item ) {
+			if ( '.' === $item || '..' === $item ) {
+				continue;
+			}
+
+			$path = $dir . DIRECTORY_SEPARATOR . $item;
+			if ( is_dir( $path ) ) {
+				$this->remove_dir_fallback( $path );
+			} else {
+				@unlink( $path );
+			}
+		}
+
+		return @rmdir( $dir );
 	}
 
 	/**
