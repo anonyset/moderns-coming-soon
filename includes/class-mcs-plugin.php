@@ -324,10 +324,10 @@ class Modern_Coming_Soon {
 			return $result;
 		}
 
-		$changelog = '<h4>1.0.18</h4><ul>'
-			. '<li>نام و دسته‌بندی فارسی برای همهٔ قالب‌ها</li>'
-			. '<li>تمپلیت‌های شغلی جدید: پزشکی، حقوقی، تناسب اندام</li>'
-			. '<li>پاک‌سازی خودکار upgrade-temp-backup قبل از آپدیت</li>'
+		$changelog = '<h4>1.0.19</h4><ul>'
+			. '<li>رفع مشکل نبود فایل پس از آپدیت و جلوگیری از خطای file_get_contents</li>'
+			. '<li>اطلاعات پاپ‌آپ جزئیات نگارش (changelog) فعال شد</li>'
+			. '<li>بهبود فارسی‌سازی نام/دسته قالب‌ها</li>'
 			. '</ul>';
 
 		$info                = new stdClass();
@@ -351,7 +351,46 @@ class Modern_Coming_Soon {
 
 		return $info;
 	}
-public function rescue_update_directory( $source, $remote_source, $upgrader, $hook_extra ) {
+
+	/**
+	 * After install, ensure destination folder/file exists and matches expected dir name.
+	 *
+	 * @param bool|WP_Error $result Result.
+	 * @param array         $hook_extra Extra.
+	 * @param array         $data Installer data.
+	 * @return bool|WP_Error
+	 */
+	public function finalize_install( $result, $hook_extra, $data ) {
+		if ( empty( $hook_extra['plugin'] ) || $hook_extra['plugin'] !== $this->plugin_slug ) {
+			return $result;
+		}
+
+		$expected_dir = trailingslashit( WP_PLUGIN_DIR ) . $this->plugin_dirname;
+		$expected_file = trailingslashit( $expected_dir ) . 'modern-coming-soon.php';
+
+		// If destination is different, try to rename/move it into place.
+		if ( ! empty( $data['destination'] ) && untrailingslashit( $data['destination'] ) !== untrailingslashit( $expected_dir ) ) {
+			$source = untrailingslashit( $data['destination'] );
+			if ( is_dir( $source ) && ( @rename( $source, $expected_dir ) || $this->copy_dir_fallback( $source, $expected_dir ) ) ) {
+				$this->remove_dir_fallback( $source );
+				$data['destination'] = $expected_dir;
+			}
+		}
+
+		// If file still missing but exists inside destination, copy it over.
+		if ( ! file_exists( $expected_file ) && ! empty( $data['destination'] ) ) {
+			$maybe = untrailingslashit( $data['destination'] ) . '/modern-coming-soon.php';
+			if ( file_exists( $maybe ) ) {
+				if ( ! is_dir( $expected_dir ) ) {
+					@mkdir( $expected_dir, 0755, true );
+				}
+				@rename( $maybe, $expected_file );
+			}
+		}
+
+		return $result;
+	}
+\n\t/**\n\t * Catch rename WP_Errors from other filters (e.g., PUC) and try to continue gracefully.\n\t *\n\t * @param string|WP_Error         Source path (or error).\n\t * @param string           Remote path.\n\t * @param WP_Upgrader           Upgrader instance.\n\t * @param array               Extra data.\n\t * @return string|WP_Error\n\t */\n\tpublic function rescue_update_directory( $source, $remote_source, $upgrader, $hook_extra ) {
 		if ( empty( $hook_extra['plugin'] ) || $hook_extra['plugin'] !== $this->plugin_slug ) {
 			return $source;
 		}
@@ -678,6 +717,9 @@ public function rescue_update_directory( $source, $remote_source, $upgrader, $ho
 		wp_clear_scheduled_hook( 'mcs_cleanup' );
 	}
 }
+
+
+
 
 
 
