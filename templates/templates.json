@@ -2,22 +2,43 @@
   {
     "slug": "classic",
     "name": "Corporate Glass",
-    "category": "corporate",
+    "category": "شرکتی",
     "screenshot": "templates/classic/thumbnail.svg",
     "sections": ["logo", "title", "subtitle", "content", "countdown", "progress", "subscribe", "social"]
   },
   {
     "slug": "startup-wave",
     "name": "Startup Wave",
-    "category": "startup",
+    "category": "استارتاپ",
     "screenshot": "templates/startup-wave/thumbnail.svg",
     "sections": ["logo", "title", "subtitle", "content", "countdown", "subscribe", "social"]
   },
   {
     "slug": "restaurant-ember",
     "name": "Restaurant Ember",
-    "category": "restaurant",
+    "category": "رستوران",
     "screenshot": "templates/restaurant-ember/thumbnail.svg",
     "sections": ["logo", "title", "subtitle", "content", "countdown", "subscribe", "social"]
+  },
+  {
+    "slug": "clinic-ice",
+    "name": "Clinic Ice",
+    "category": "پزشکی",
+    "screenshot": "templates/clinic-ice/thumbnail.svg",
+    "sections": ["logo", "title", "subtitle", "content", "countdown", "progress", "subscribe", "social"]
+  },
+  {
+    "slug": "lawyer-slate",
+    "name": "Lawyer Slate",
+    "category": "حقوقی",
+    "screenshot": "templates/lawyer-slate/thumbnail.svg",
+    "sections": ["logo", "title", "subtitle", "content", "countdown", "subscribe", "social"]
+  },
+  {
+    "slug": "fitness-pulse",
+    "name": "Fitness Pulse",
+    "category": "تناسب اندام",
+    "screenshot": "templates/fitness-pulse/thumbnail.svg",
+    "sections": ["logo", "title", "subtitle", "content", "countdown", "progress", "subscribe", "social"]
   }
 ]
