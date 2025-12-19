@@ -1,6 +1,6 @@
 {
     "name":  "modern-coming-soon",
-    "version":  "1.0.17",
+    "version":  "1.0.18",
     "private":  true,
     "scripts":  {
                     "start":  "wp-scripts start admin/src/index.js --output-path assets/admin",
