@@ -38,6 +38,13 @@ class Modern_Coming_Soon {
 	private $plugin_slug;
 
 	/**
+	 * Plugin directory name.
+	 *
+	 * @var string
+	 */
+	private $plugin_dirname;
+
+	/**
 	 * Settings helper.
 	 *
 	 * @var MCS_Settings
@@ -117,8 +124,13 @@ class Modern_Coming_Soon {
 		$this->blocks      = new MCS_Blocks( $this->settings );
 		$this->elementor   = new MCS_Elementor( $this->settings );
 		$this->plugin_slug = plugin_basename( MCS_PLUGIN_FILE );
+		$this->plugin_dirname = dirname( $this->plugin_slug );
+		if ( '.' === $this->plugin_dirname || empty( $this->plugin_dirname ) ) {
+			$this->plugin_dirname = basename( untrailingslashit( dirname( MCS_PLUGIN_FILE ) ) );
+		}
 		if ( is_admin() ) {
 			add_filter( 'upgrader_source_selection', array( $this, 'fix_update_directory' ), 9, 4 );
+			add_filter( 'upgrader_source_selection', array( $this, 'rescue_update_directory' ), 20, 4 );
 			$this->bootstrap_updater();
 		}
 
@@ -164,6 +176,13 @@ class Modern_Coming_Soon {
 
 			// Best-effort: set branch and enable release assets if available on this instance.
 			if ( is_object( $this->puc ) ) {
+				// Align PUC directory name with the actual installed path to avoid rename mismatches.
+				if ( property_exists( $this->puc, 'directoryName' ) && '.' !== $this->plugin_dirname && ! empty( $this->plugin_dirname ) ) {
+					$this->puc->directoryName = $this->plugin_dirname;
+				}
+				// Avoid double-rename failures: we'll handle rename earlier in our own filter.
+				remove_filter( 'upgrader_source_selection', array( $this->puc, 'fixDirectoryName' ), 10 );
+
 				if ( method_exists( $this->puc, 'setBranch' ) ) {
 					$this->puc->setBranch( 'main' );
 				}
@@ -194,11 +213,16 @@ class Modern_Coming_Soon {
 	 * @return string
 	 */
 	public function fix_update_directory( $source, $remote_source, $upgrader, $hook_extra ) {
+		// Remove PUC's rename hook to prevent WP_Error aborts; we'll perform a forgiving rename here.
+		if ( is_object( $this->puc ) ) {
+			remove_filter( 'upgrader_source_selection', array( $this->puc, 'fixDirectoryName' ), 10 );
+		}
+
 		if ( empty( $hook_extra['plugin'] ) || $hook_extra['plugin'] !== $this->plugin_slug ) {
 			return $source;
 		}
 
-		$expected = dirname( $this->plugin_slug );
+		$expected = $this->plugin_dirname;
 		if ( '.' === $expected || empty( $expected ) ) {
 			return $source;
 		}
@@ -232,6 +256,62 @@ class Modern_Coming_Soon {
 			return trailingslashit( $target );
 		}
 
+		return $source;
+	}
+
+	/**
+	 * Catch rename WP_Errors from other filters (e.g., PUC) and try to continue gracefully.
+	 *
+	 * @param string|WP_Error $source        Source path (or error).
+	 * @param string          $remote_source Remote path.
+	 * @param WP_Upgrader     $upgrader      Upgrader instance.
+	 * @param array           $hook_extra    Extra data.
+	 * @return string|WP_Error
+	 */
+	public function rescue_update_directory( $source, $remote_source, $upgrader, $hook_extra ) {
+		if ( empty( $hook_extra['plugin'] ) || $hook_extra['plugin'] !== $this->plugin_slug ) {
+			return $source;
+		}
+
+		if ( ! is_wp_error( $source ) ) {
+			return $source;
+		}
+
+		$expected = $this->plugin_dirname;
+		if ( '.' === $expected || empty( $expected ) ) {
+			return $source;
+		}
+
+		$target = trailingslashit( $remote_source ) . $expected . '/';
+
+		// If target exists already, just use it.
+		if ( is_dir( $target ) ) {
+			return trailingslashit( $target );
+		}
+
+		// Try one more move/copy to recover from rename failure.
+		$source_dir = ( is_string( $source ) && is_dir( $source ) ) ? $source : '';
+
+		if ( empty( $source_dir ) && is_dir( $remote_source ) ) {
+			// Attempt to detect the extracted folder inside remote_source.
+			$entries = glob( trailingslashit( $remote_source ) . '*', GLOB_ONLYDIR );
+			if ( ! empty( $entries ) ) {
+				$source_dir = $entries[0];
+			}
+		}
+
+		if ( $source_dir ) {
+			if ( @rename( $source_dir, $target ) ) {
+				return trailingslashit( $target );
+			}
+
+			if ( $this->copy_dir_fallback( $source_dir, $target ) ) {
+				$this->remove_dir_fallback( $source_dir );
+				return trailingslashit( $target );
+			}
+		}
+
+		// Give up; return original error.
 		return $source;
 	}
 
