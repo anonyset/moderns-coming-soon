@@ -140,6 +140,7 @@ class Modern_Coming_Soon {
 		add_action( 'admin_menu', array( $this, 'register_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin' ) );
 		add_filter( 'plugin_action_links_' . plugin_basename( MCS_PLUGIN_FILE ), array( $this, 'plugin_links' ) );
+		add_filter( 'plugins_api', array( $this, 'plugin_info_popup' ), 20, 3 );
 
 		$this->rest->hooks();
 		$this->frontend->hooks();
@@ -305,7 +306,52 @@ class Modern_Coming_Soon {
 	 * @param array           $hook_extra    Extra data.
 	 * @return string|WP_Error
 	 */
-	public function rescue_update_directory( $source, $remote_source, $upgrader, $hook_extra ) {
+		/**
+	 * Provide plugin information popup (details) even when using PUC.
+	 *
+	 * @param mixed  $result Existing result.
+	 * @param string $action Action name.
+	 * @param object $args   Args.
+	 * @return mixed
+	 */
+	public function plugin_info_popup( $result, $action, $args ) {
+		if ( 'plugin_information' !== $action ) {
+			return $result;
+		}
+
+		$slug = dirname( $this->plugin_slug );
+		if ( empty( $args->slug ) || $slug !== $args->slug ) {
+			return $result;
+		}
+
+		$changelog = '<h4>1.0.18</h4><ul>'
+			. '<li>نام و دسته‌بندی فارسی برای همهٔ قالب‌ها</li>'
+			. '<li>تمپلیت‌های شغلی جدید: پزشکی، حقوقی، تناسب اندام</li>'
+			. '<li>پاک‌سازی خودکار upgrade-temp-backup قبل از آپدیت</li>'
+			. '</ul>';
+
+		$info                = new stdClass();
+		$info->name          = __( 'Modern Coming Soon & Maintenance', 'modern-coming-soon' );
+		$info->slug          = $slug;
+		$info->version       = MCS_VERSION;
+		$info->download_link = 'https://github.com/anonyset/modern-coming-soon/archive/refs/heads/main.zip';
+		$info->last_updated  = current_time( 'mysql' );
+		$info->homepage      = 'https://github.com/anonyset/modern-coming-soon';
+		$info->author        = '<a href="https://qomweb.site/maint">Hosein Momeni</a>';
+		$info->requires      = '6.0';
+		$info->tested        = '6.6';
+		$info->sections      = array(
+			'description' => wp_kses_post(
+				wpautop(
+					__( 'Modern Coming Soon, Maintenance, and Factory (Hard Lock) modes with React admin, template library, Gutenberg, and Elementor widgets. Updates delivered from GitHub.', 'modern-coming-soon' )
+				)
+			),
+			'changelog'   => wp_kses_post( $changelog ),
+		);
+
+		return $info;
+	}
+public function rescue_update_directory( $source, $remote_source, $upgrader, $hook_extra ) {
 		if ( empty( $hook_extra['plugin'] ) || $hook_extra['plugin'] !== $this->plugin_slug ) {
 			return $source;
 		}
@@ -632,6 +678,9 @@ class Modern_Coming_Soon {
 		wp_clear_scheduled_hook( 'mcs_cleanup' );
 	}
 }
+
+
+
 
 
 
