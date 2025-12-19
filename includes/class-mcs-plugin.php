@@ -129,6 +129,7 @@ class Modern_Coming_Soon {
 			$this->plugin_dirname = basename( untrailingslashit( dirname( MCS_PLUGIN_FILE ) ) );
 		}
 		if ( is_admin() ) {
+			add_filter( 'upgrader_pre_install', array( $this, 'prepare_backup_directory' ), 5, 2 );
 			add_filter( 'upgrader_source_selection', array( $this, 'fix_update_directory' ), 9, 4 );
 			add_filter( 'upgrader_source_selection', array( $this, 'rescue_update_directory' ), 20, 4 );
 			$this->bootstrap_updater();
@@ -257,6 +258,42 @@ class Modern_Coming_Soon {
 		}
 
 		return $source;
+	}
+
+	/**
+	 * Ensure upgrade-temp-backup path is clear so WP can move the old plugin there.
+	 *
+	 * @param mixed $return      Existing return value.
+	 * @param array $hook_extra  Extra data.
+	 * @return mixed
+	 */
+	public function prepare_backup_directory( $return, $hook_extra ) {
+		if ( empty( $hook_extra['plugin'] ) || $hook_extra['plugin'] !== $this->plugin_slug ) {
+			return $return;
+		}
+
+		global $wp_filesystem;
+		if ( ! $wp_filesystem ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+			WP_Filesystem();
+		}
+
+		$backup_root = trailingslashit( WP_CONTENT_DIR ) . 'upgrade/upgrade-temp-backup';
+		$backup_path = trailingslashit( $backup_root ) . $this->plugin_dirname;
+
+		if ( ! is_dir( $backup_root ) ) {
+			@mkdir( $backup_root, 0755, true );
+		}
+
+		if ( is_dir( $backup_path ) ) {
+			if ( $wp_filesystem && method_exists( $wp_filesystem, 'delete' ) ) {
+				$wp_filesystem->delete( $backup_path, true );
+			} else {
+				$this->remove_dir_fallback( $backup_path );
+			}
+		}
+
+		return $return;
 	}
 
 	/**
@@ -595,3 +632,18 @@ class Modern_Coming_Soon {
 		wp_clear_scheduled_hook( 'mcs_cleanup' );
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
